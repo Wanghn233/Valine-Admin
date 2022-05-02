@@ -56,6 +56,49 @@ exports.notice = (comment) => {
     comment.save();
   });
 
+  if (process.env.PUSHPLUS_TOKEN != null) {
+    const   PushplusDespTemplate = `
+#### ${NICK} 给您的回复如下：
+        
+> ${COMMENT}
+        
+#### 您可以点击[查看回复的完整內容](${POST_URL})`;
+    const PushplusTextTemplate = `您在 ${SITE_NAME} 上有新评论啦！`;
+    const PushplusChannel = "wechat";
+    const PushplusTemplate = "markdown";
+    const PushplusWebhook = "";
+
+    const _DespTemplate = process.env.PUSHPLUS_DESP_TEMPLATE || PushplusDespTemplate;
+    const _TextTemplate = process.env.PUSHPLUS_TEXT_TEMPLATE || PushplusTextTemplate;
+    const _Template = process.env.PUSHPLUS_TEMPLATE || PushplusTemplate;
+    const _Channel = process.env.PUSHPLUS_CHANNEL || PushplusChannel;
+    const _Webhook = process.env.PUSHPLUS_WEBHOOK || PushplusWebhook;
+    var data = {
+      "token": process.env.PUSHPLUS_TOKEN,
+      "title": _TextTemplate,
+      "content": _DespTemplate,
+      "template": _Template,
+      "channel": _Channel,
+      "webhook": _Webhook
+    }
+    request(
+      {
+        url: `http://www.pushplus.plus/send`,
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json; charset=UTF-8",
+        },
+      },
+      function (error, response, body) {
+        if (error) return console.log("发送微信提醒异常：", error);
+        if (body) body = JSON.parse(body);
+        if (response.statusCode === 200 && body.code === 200) console.log("已发送微信提醒");
+        else console.warn("微信提醒失败:", body);
+      }
+    );
+  }
+
   if (process.env.SC_KEY != null) {
     const ScDespTemplate = `
 #### ${NICK} 给您的回复如下：
